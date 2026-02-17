@@ -1,0 +1,2378 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestão de Obras - Cunha Reparos</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="./_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { font-family: 'Plus Jakarta Sans', sans-serif; }
+    
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1a1a1a; }
+    ::-webkit-scrollbar-thumb { background: #fbbf24; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #f59e0b; }
+    
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(251, 191, 36, 0.3); }
+      50% { box-shadow: 0 0 30px rgba(251, 191, 36, 0.5); }
+    }
+    
+    .card-animate { animation: slideIn 0.3s ease-out; }
+    .glow-effect { animation: pulse-glow 2s ease-in-out infinite; }
+    
+    .tab-active {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      color: #000;
+      box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);
+    }
+    
+    .status-orcamento { background: #fef3c7; color: #92400e; }
+    .status-aprovada { background: #dbeafe; color: #1e40af; }
+    .status-andamento { background: #fed7aa; color: #c2410c; }
+    .status-concluida { background: #d1fae5; color: #065f46; }
+    .status-cancelada { background: #fee2e2; color: #991b1b; }
+    .status-pago { background: #d1fae5; color: #065f46; }
+    .status-pendente { background: #fee2e2; color: #991b1b; }
+    
+    .form-input {
+      background: #1a1a1a;
+      border: 1px solid #fbbf24;
+      color: #f1f5f9;
+      transition: all 0.2s ease;
+    }
+    .form-input:focus {
+      border-color: #fbbf24;
+      box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.2);
+      outline: none;
+    }
+    .form-input::placeholder { color: #666; }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      transition: all 0.2s ease;
+      color: #000;
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(251, 191, 36, 0.4);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    .btn-danger:hover {
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    }
+    
+    .modal-overlay {
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(4px);
+    }
+    
+    .toast {
+      animation: slideIn 0.3s ease-out;
+    }
+    
+    .pdf-document {
+      background: white;
+      color: #000;
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      width: 210mm;
+      min-height: 297mm;
+      box-sizing: border-box;
+    }
+    
+    .pdf-header {
+      border-bottom: 3px solid #fbbf24;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .pdf-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: #f59e0b;
+      margin-bottom: 5px;
+    }
+    
+    .pdf-subtitle {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .pdf-section {
+      margin-bottom: 25px;
+    }
+    
+    .pdf-section-title {
+      font-size: 14px;
+      font-weight: bold;
+      background: #f0f0f0;
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      border-left: 4px solid #fbbf24;
+    }
+    
+    .pdf-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 15px;
+    }
+    
+    .pdf-table th {
+      background: #f59e0b;
+      color: white;
+      padding: 10px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: bold;
+    }
+    
+    .pdf-table td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      font-size: 11px;
+    }
+    
+    .pdf-table tr:nth-child(even) {
+      background: #f9f9f9;
+    }
+    
+    .pdf-row {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: #f9f9f9;
+      border-left: 3px solid #fbbf24;
+    }
+    
+    .pdf-row-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+    
+    .pdf-footer {
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      text-align: center;
+      font-size: 10px;
+      color: #666;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(251,191,36,0.3);
+      border-radius: 50%;
+      border-top-color: #fbbf24;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: #fbbf24;
+      color: #000;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body class="h-full bg-black text-slate-100">
+  <div id="app" class="h-full flex flex-col overflow-auto bg-black">
+    
+    <!-- Header -->
+    <header class="bg-black border-b border-amber-500/30 px-3 sm:px-4 py-3 sm:py-4 flex-shrink-0">
+      <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center flex-shrink-0 glow-effect">
+            <svg class="w-6 h-6 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <h1 id="system-title" class="text-lg sm:text-xl font-bold text-white truncate">Gestão de Obras</h1>
+            <p id="company-name" class="text-xs sm:text-sm text-amber-400 truncate">Cunha Reparos</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <div class="sync-badge" id="sync-status">
+            <div class="w-2 h-2 rounded-full bg-black"></div>
+            Salvo Localmente
+          </div>
+          <p class="text-right hidden sm:block flex-shrink-0">
+            <p class="text-sm text-amber-400/70" id="current-date"></p>
+          </p>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Navigation Tabs -->
+    <nav class="bg-black/50 px-2 sm:px-4 py-2 flex-shrink-0 border-b border-amber-500/20 overflow-x-auto">
+      <div class="max-w-7xl mx-auto flex gap-1 sm:gap-2">
+        <button onclick="showSection('dashboard')" id="tab-dashboard" class="tab-btn tab-active px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap transition-all">
+          📊 Painel
+        </button>
+        <button onclick="showSection('clientes')" id="tab-clientes" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap bg-neutral-900 hover:bg-neutral-800 transition-all text-amber-400">
+          👥 Clientes
+        </button>
+        <button onclick="showSection('obras')" id="tab-obras" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap bg-neutral-900 hover:bg-neutral-800 transition-all text-amber-400">
+          🏗️ Obras
+        </button>
+        <button onclick="showSection('financeiro')" id="tab-financeiro" class="tab-btn px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap bg-neutral-900 hover:bg-neutral-800 transition-all text-amber-400">
+          💰 Financeiro
+        </button>
+      </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <main class="flex-1 overflow-auto p-2 sm:p-4 bg-black">
+      <div class="max-w-7xl mx-auto">
+        
+        <!-- Dashboard Section -->
+        <section id="section-dashboard" class="section-content card-animate">
+          <h2 class="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 flex items-center gap-2 text-amber-400">
+            <span class="text-2xl sm:text-3xl">📊</span> <span class="truncate">Painel</span>
+          </h2>
+          
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6 sm:mb-8">
+            <div class="bg-gradient-to-br from-emerald-500/20 to-emerald-600/10 border border-emerald-500/30 rounded-2xl p-4 sm:p-5">
+              <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-2xl sm:text-3xl">💵</span>
+                <span class="text-xs px-2 py-1 bg-emerald-500/20 rounded-full text-emerald-400">Recebido</span>
+              </div>
+              <p class="text-xl sm:text-2xl font-bold text-emerald-400" id="stat-recebido">R$ 0,00</p>
+              <p class="text-xs sm:text-sm text-slate-400 mt-1">Total já recebido</p>
+            </div>
+            
+            <div class="bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 rounded-2xl p-4 sm:p-5">
+              <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-2xl sm:text-3xl">📋</span>
+                <span class="text-xs px-2 py-1 bg-amber-500/20 rounded-full text-amber-400">A Receber</span>
+              </div>
+              <p class="text-xl sm:text-2xl font-bold text-amber-400" id="stat-receber">R$ 0,00</p>
+              <p class="text-xs sm:text-sm text-slate-400 mt-1">Total a receber</p>
+            </div>
+            
+            <div class="bg-gradient-to-br from-orange-500/20 to-orange-600/10 border border-orange-500/30 rounded-2xl p-4 sm:p-5">
+              <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-2xl sm:text-3xl">🏗️</span>
+                <span class="text-xs px-2 py-1 bg-orange-500/20 rounded-full text-orange-400">Em Andamento</span>
+              </div>
+              <p class="text-xl sm:text-2xl font-bold text-orange-400" id="stat-andamento">0</p>
+              <p class="text-xs sm:text-sm text-slate-400 mt-1">Obras em execução</p>
+            </div>
+            
+            <div class="bg-gradient-to-br from-amber-400/20 to-amber-500/10 border border-amber-400/30 rounded-2xl p-4 sm:p-5">
+              <div class="flex items-center justify-between mb-2 sm:mb-3">
+                <span class="text-2xl sm:text-3xl">✓</span>
+                <span class="text-xs px-2 py-1 bg-amber-400/20 rounded-full text-amber-300">Concluídas</span>
+              </div>
+              <p class="text-xl sm:text-2xl font-bold text-amber-300" id="stat-concluidas">0</p>
+              <p class="text-xs sm:text-sm text-slate-400 mt-1">Obras finalizadas</p>
+            </div>
+          </div>
+          
+          <!-- Recent Activity -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <div class="bg-neutral-900 rounded-2xl p-4 sm:p-5 border border-amber-500/20">
+              <h3 class="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2 text-amber-400">
+                <span>🏗️</span> Obras Recentes
+              </h3>
+              <div id="recent-obras" class="space-y-3">
+                <p class="text-slate-500 text-sm text-center py-4">Nenhuma obra cadastrada</p>
+              </div>
+            </div>
+            
+            <div class="bg-neutral-900 rounded-2xl p-4 sm:p-5 border border-amber-500/20">
+              <h3 class="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2 text-amber-400">
+                <span>📅</span> Parcelas Próximas
+              </h3>
+              <div id="upcoming-parcelas" class="space-y-3">
+                <p class="text-slate-500 text-sm text-center py-4">Nenhuma parcela pendente</p>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <!-- Clientes Section -->
+        <section id="section-clientes" class="section-content hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2 text-amber-400">
+              <span class="text-2xl sm:text-3xl">👥</span> <span class="truncate">Clientes</span>
+            </h2>
+            <button onclick="openClienteModal()" class="btn-primary px-4 sm:px-5 py-2.5 rounded-xl font-medium flex items-center justify-center sm:justify-start gap-2 text-sm sm:text-base">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              <span class="hidden sm:inline">Novo Cliente</span>
+              <span class="sm:hidden">Novo</span>
+            </button>
+          </div>
+          
+          <!-- Search -->
+          <div class="mb-4 sm:mb-6">
+            <input type="text" id="search-cliente" placeholder="🔍 Buscar cliente..." 
+              class="form-input w-full px-4 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base" oninput="filterClientes()">
+          </div>
+          
+          <!-- Clients List -->
+          <div id="clientes-list" class="grid gap-3 sm:gap-4">
+            <p class="text-slate-500 text-center py-8">Nenhum cliente cadastrado</p>
+          </div>
+        </section>
+        
+        <!-- Obras Section -->
+        <section id="section-obras" class="section-content hidden">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2 text-amber-400">
+              <span class="text-2xl sm:text-3xl">🏗️</span> <span class="truncate">Obras</span>
+            </h2>
+            <button onclick="openObraModal()" class="btn-primary px-4 sm:px-5 py-2.5 rounded-xl font-medium flex items-center justify-center sm:justify-start gap-2 text-sm sm:text-base">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              <span class="hidden sm:inline">Nova Obra</span>
+              <span class="sm:hidden">Nova</span>
+            </button>
+          </div>
+          
+          <!-- Filters -->
+          <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <select id="filter-status-obra" class="form-input px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" onchange="filterObras()">
+              <option value="">Todos os Status</option>
+              <option value="Orçamento">Orçamento</option>
+              <option value="Aprovada">Aprovada</option>
+              <option value="Em andamento">Em andamento</option>
+              <option value="Concluída">Concluída</option>
+              <option value="Cancelada">Cancelada</option>
+            </select>
+            <input type="text" id="search-obra" placeholder="🔍 Buscar obra..." 
+              class="form-input flex-1 px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" oninput="filterObras()">
+          </div>
+          
+          <!-- Obras List -->
+          <div id="obras-list" class="grid gap-3 sm:gap-4">
+            <p class="text-slate-500 text-center py-8">Nenhuma obra cadastrada</p>
+          </div>
+        </section>
+        
+        <!-- Financeiro Section -->
+        <section id="section-financeiro" class="section-content hidden">
+          <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2 mb-4 sm:mb-6 text-amber-400">
+            <span class="text-2xl sm:text-3xl">💰</span> <span class="truncate">Gestão Financeira</span>
+          </h2>
+          
+          <!-- Summary Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div class="bg-neutral-900 rounded-xl p-3 sm:p-4 border border-amber-500/20">
+              <p class="text-xs sm:text-sm text-slate-400 mb-1">Total das Obras</p>
+              <p class="text-lg sm:text-xl font-bold text-white" id="fin-total">R$ 0,00</p>
+            </div>
+            <div class="bg-neutral-900 rounded-xl p-3 sm:p-4 border border-amber-500/20">
+              <p class="text-xs sm:text-sm text-slate-400 mb-1">Total Pago</p>
+              <p class="text-lg sm:text-xl font-bold text-emerald-400" id="fin-pago">R$ 0,00</p>
+            </div>
+            <div class="bg-neutral-900 rounded-xl p-3 sm:p-4 border border-amber-500/20">
+              <p class="text-xs sm:text-sm text-slate-400 mb-1">Saldo Devedor</p>
+              <p class="text-lg sm:text-xl font-bold text-red-400" id="fin-devedor">R$ 0,00</p>
+            </div>
+          </div>
+          
+          <!-- Monthly Sales, Best Clients and Expenses Row -->
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+            <!-- Monthly Sales -->
+            <div class="bg-neutral-900 rounded-2xl p-4 sm:p-5 border border-amber-500/20">
+              <h3 class="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2 text-amber-400">
+                <span>📈</span> <span class="truncate">Vendas por Mês</span>
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                  <select id="select-mes-venda" class="form-input flex-1 px-3 py-2 rounded-lg text-xs sm:text-sm" onchange="updateMonthlySales()">
+                    <option value="">Selecione...</option>
+                  </select>
+                </div>
+                <div class="bg-neutral-800 rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3">
+                  <div>
+                    <p class="text-slate-500 text-xs mb-1">Valor Total do Mês</p>
+                    <p class="text-xl sm:text-2xl font-bold text-amber-400" id="monthly-total">R$ 0,00</p>
+                  </div>
+                  <div>
+                    <p class="text-slate-500 text-xs mb-1">Recebido no Mês</p>
+                    <p class="text-lg sm:text-xl font-bold text-emerald-400" id="monthly-received">R$ 0,00</p>
+                  </div>
+                  <div>
+                    <p class="text-slate-500 text-xs mb-1">A Receber no Mês</p>
+                    <p class="text-lg sm:text-xl font-bold text-orange-400" id="monthly-pending">R$ 0,00</p>
+                  </div>
+                  <div class="pt-2 sm:pt-3 border-t border-neutral-700">
+                    <p class="text-slate-500 text-xs mb-1">Obras do Mês</p>
+                    <p class="text-base sm:text-lg font-semibold text-slate-300" id="monthly-obras">0</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Best Clients Ranking -->
+            <div class="bg-neutral-900 rounded-2xl p-4 sm:p-5 border border-amber-500/20">
+              <h3 class="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2 text-amber-400">
+                <span>🏆</span> <span class="truncate">Melhores Clientes</span>
+              </h3>
+              <div id="best-clients-list" class="space-y-2">
+                <p class="text-slate-500 text-sm text-center py-4 sm:py-6">Nenhum cliente cadastrado</p>
+              </div>
+            </div>
+
+            <!-- Expenses by Month -->
+            <div class="bg-neutral-900 rounded-2xl p-4 sm:p-5 border border-amber-500/20">
+              <h3 class="text-base sm:text-lg font-semibold mb-4 flex items-center gap-2 text-amber-400">
+                <span>💸</span> <span class="truncate">Despesas por Mês</span>
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                  <select id="select-mes-despesa" class="form-input flex-1 px-3 py-2 rounded-lg text-xs sm:text-sm" onchange="updateMonthlySales()">
+                    <option value="">Selecione...</option>
+                  </select>
+                  <button onclick="openDespesaModal()" class="p-2 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 transition-all" title="Adicionar Despesa">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                  </button>
+                </div>
+                <div class="bg-neutral-800 rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3">
+                  <div>
+                    <p class="text-slate-500 text-xs mb-1">Despesas Totais</p>
+                    <p class="text-xl sm:text-2xl font-bold text-red-400" id="monthly-expenses">R$ 0,00</p>
+                  </div>
+                  <div>
+                    <p class="text-slate-500 text-xs mb-1">Lucro Líquido</p>
+                    <p class="text-lg sm:text-xl font-bold text-emerald-400" id="net-profit">R$ 0,00</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Filter by Obra -->
+          <div class="mb-4 sm:mb-6">
+            <select id="filter-obra-financeiro" class="form-input w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl text-sm sm:text-base" onchange="filterFinanceiro()">
+              <option value="">Todas as Obras</option>
+            </select>
+          </div>
+          
+          <!-- Parcelas List -->
+          <div class="bg-neutral-900 rounded-2xl border border-amber-500/20 overflow-hidden">
+            <div class="p-3 sm:p-4 border-b border-amber-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <h3 class="font-semibold text-amber-400">Parcelas</h3>
+              <div class="flex gap-2 flex-wrap">
+                <button onclick="filterParcelas('todas')" class="parcela-filter-btn text-xs px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-all text-amber-400" data-filter="todas">Todas</button>
+                <button onclick="filterParcelas('pendente')" class="parcela-filter-btn text-xs px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-all text-amber-400" data-filter="pendente">Pendentes</button>
+                <button onclick="filterParcelas('pago')" class="parcela-filter-btn text-xs px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-all text-amber-400" data-filter="pago">Pagas</button>
+              </div>
+            </div>
+            <div id="parcelas-list" class="divide-y divide-neutral-800">
+              <p class="text-slate-500 text-sm text-center py-8">Nenhuma parcela cadastrada</p>
+            </div>
+          </div>
+        </section>
+        
+      </div>
+    </main>
+    
+    <!-- Cliente Modal -->
+    <div id="modal-cliente" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-3 sm:p-4">
+      <div class="bg-neutral-900 rounded-2xl w-full max-w-lg max-h-[90%] overflow-y-auto border border-amber-500/20 card-animate">
+        <div class="p-4 sm:p-5 border-b border-amber-500/10 flex items-center justify-between sticky top-0 bg-neutral-900 z-10">
+          <h3 class="text-base sm:text-lg font-bold truncate text-amber-400" id="modal-cliente-title">Novo Cliente</h3>
+          <button onclick="closeClienteModal()" class="w-8 h-8 rounded-lg bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center transition-all flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <form id="form-cliente" class="p-4 sm:p-5 space-y-3 sm:space-y-4" onsubmit="saveCliente(event)">
+          <input type="hidden" id="cliente-id">
+          
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Razão Social / Nome *</label>
+            <input type="text" id="cliente-nome" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="Digite a razão social ou nome">
+          </div>
+          
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">CNPJ/CPF *</label>
+            <input type="text" id="cliente-documento" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="Digite o CNPJ ou CPF">
+          </div>
+          
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Endereço *</label>
+            <input type="text" id="cliente-endereco" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="Digite o endereço">
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div>
+              <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Nº *</label>
+              <input type="text" id="cliente-numero" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="Digite o número">
+            </div>
+            <div>
+              <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Complemento</label>
+              <input type="text" id="cliente-complemento" class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="Digite o complemento">
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <div>
+              <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Cidade *</label>
+              <input type="text" id="cliente-cidade" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="Digite a cidade">
+            </div>
+            <div>
+              <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">CEP *</label>
+              <input type="text" id="cliente-cep" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="Digite o CEP">
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Telefone/WhatsApp *</label>
+            <input type="tel" id="cliente-telefone" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="Digite o número">
+          </div>
+          
+          <div class="flex gap-2 sm:gap-3 pt-2">
+            <button type="button" onclick="closeClienteModal()" class="flex-1 px-3 sm:px-4 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 font-medium transition-all text-sm sm:text-base">
+              Cancelar
+            </button>
+            <button type="submit" class="flex-1 btn-primary px-3 sm:px-4 py-2.5 rounded-xl font-medium text-sm sm:text-base" id="btn-save-cliente">
+              Salvar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Obra Modal -->
+    <div id="modal-obra" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-3 sm:p-4">
+      <div class="bg-neutral-900 rounded-2xl w-full max-w-2xl max-h-[90%] overflow-y-auto border border-amber-500/20 card-animate">
+        <div class="p-4 sm:p-5 border-b border-amber-500/10 flex items-center justify-between sticky top-0 bg-neutral-900 z-10">
+          <h3 class="text-base sm:text-lg font-bold truncate text-amber-400" id="modal-obra-title">Nova Obra</h3>
+          <button onclick="closeObraModal()" class="w-8 h-8 rounded-lg bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center transition-all flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <form id="form-obra" class="p-4 sm:p-5" onsubmit="saveObra(event)">
+          <input type="hidden" id="obra-id">
+          <input type="hidden" id="obra-servicos" value="[]">
+          
+          <!-- Cliente - Full Width -->
+          <div class="mb-3 sm:mb-4">
+            <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Cliente *</label>
+            <select id="obra-cliente" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base">
+              <option value="">Selecione um cliente</option>
+            </select>
+          </div>
+          
+          <!-- Serviços da Obra - Full Width -->
+          <div class="border-t border-amber-500/10 pt-3 sm:pt-4 mb-4 sm:mb-6">
+            <div class="flex items-center justify-between mb-3 gap-2">
+              <h4 class="font-semibold flex items-center gap-2 truncate text-sm sm:text-base text-amber-400">
+                <span>🔨</span> <span class="truncate">Serviços</span>
+              </h4>
+              <button type="button" onclick="addServicoModal()" class="text-xs px-2 sm:px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 font-medium transition-all flex-shrink-0 whitespace-nowrap">
+                + Adicionar
+              </button>
+            </div>
+            
+            <div class="bg-neutral-800 rounded-xl overflow-x-auto">
+              <div class="hidden sm:grid grid-cols-12 gap-2 p-3 bg-neutral-700/50 border-b border-neutral-600 text-xs font-semibold text-slate-400 min-w-full">
+                <div class="col-span-1">Cód.</div>
+                <div class="col-span-3">Descrição</div>
+                <div class="col-span-2">Tipo/Qnt</div>
+                <div class="col-span-2">Valor Unit.</div>
+                <div class="col-span-2">Total</div>
+                <div class="col-span-2">Ação</div>
+              </div>
+              <div id="servicos-lista" class="divide-y divide-neutral-700">
+                <div class="p-3 text-sm text-slate-500 text-center">Nenhum serviço</div>
+              </div>
+            </div>
+            
+            <div class="mt-3 flex justify-end">
+              <div class="text-right">
+                <p class="text-slate-500 text-xs sm:text-sm">Valor Total da Obra:</p>
+                <p id="obra-valor-calc" class="text-xl sm:text-2xl font-bold text-amber-400">R$ 0,00</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2 Columns Grid - Status e Data Início -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+            <div>
+              <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Status *</label>
+              <select id="obra-status" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base">
+                <option value="Orçamento">Orçamento</option>
+                <option value="Aprovada">Aprovada</option>
+                <option value="Em andamento">Em andamento</option>
+                <option value="Concluída">Concluída</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Data de Início</label>
+              <input type="date" id="obra-inicio" class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base">
+            </div>
+          </div>
+
+          <!-- 2 Columns Grid - Término e Entrada -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
+            <div>
+              <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Previsão de Término</label>
+              <input type="date" id="obra-termino" class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base">
+            </div>
+            <div>
+              <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Valor de Entrada</label>
+              <input type="number" step="0.01" min="0" id="obra-entrada" class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="0,00">
+            </div>
+          </div>
+
+          <!-- 2 Columns Grid - Parcelas e Vencimento -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div>
+              <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Número de Parcelas</label>
+              <input type="number" min="0" id="obra-parcelas" class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="0">
+            </div>
+            <div>
+              <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Primeiro Vencimento</label>
+              <input type="date" id="obra-primeiro-venc" class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base">
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex gap-2 sm:gap-3">
+            <button type="button" onclick="closeObraModal()" class="flex-1 px-3 sm:px-4 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 font-medium transition-all text-sm sm:text-base">
+              Cancelar
+            </button>
+            <button type="submit" class="flex-1 btn-primary px-3 sm:px-4 py-2.5 rounded-xl font-medium text-sm sm:text-base" id="btn-save-obra">
+              Salvar Obra
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Serviço Modal -->
+    <div id="modal-servico" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-3 sm:p-4">
+      <div class="bg-neutral-900 rounded-2xl w-full max-w-sm border border-amber-500/20 card-animate">
+        <div class="p-4 sm:p-5 border-b border-amber-500/10 flex items-center justify-between">
+          <h3 class="text-base sm:text-lg font-bold truncate text-amber-400" id="modal-servico-title">Adicionar Serviço</h3>
+          <button onclick="closeServicoModal()" class="w-8 h-8 rounded-lg bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center transition-all flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <form id="form-servico" class="p-4 sm:p-5 space-y-3 sm:space-y-4" onsubmit="addServico(event)">
+          <input type="hidden" id="servico-id">
+          
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Descrição do Serviço *</label>
+            <input type="text" id="servico-desc" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="Digite o nome do serviço">
+          </div>
+          
+          <div class="grid grid-cols-2 gap-2 sm:gap-3">
+            <div>
+              <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Tipo/Unidade *</label>
+              <select id="servico-tipo" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-xs sm:text-sm">
+                <option value="">Selecione...</option>
+                <option value="QNT">QNT</option>
+                <option value="M">M</option>
+                <option value="M²">M²</option>
+                <option value="M³">M³</option>
+                <option value="H">H</option>
+                <option value="DIA">DIA</option>
+                <option value="KG">KG</option>
+                <option value="L">L</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Quantidade *</label>
+              <input type="number" step="0.01" min="1" id="servico-qnt" required value="1" class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base">
+            </div>
+          </div>
+          
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Valor Unitário *</label>
+            <input type="number" step="0.01" min="0" id="servico-valor" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="0,00">
+          </div>
+          
+          <div class="flex gap-2 sm:gap-3">
+            <button type="button" onclick="closeServicoModal()" class="flex-1 px-3 sm:px-4 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 font-medium transition-all text-xs sm:text-sm">
+              Cancelar
+            </button>
+            <button type="submit" class="flex-1 btn-primary px-3 sm:px-4 py-2.5 rounded-xl font-medium text-white text-xs sm:text-sm" id="btn-servico-text">
+              <span id="btn-servico-text">Adicionar</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Despesa Modal -->
+    <div id="modal-despesa" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-3 sm:p-4">
+      <div class="bg-neutral-900 rounded-2xl w-full max-w-sm border border-amber-500/20 card-animate">
+        <div class="p-4 sm:p-5 border-b border-amber-500/10 flex items-center justify-between">
+          <h3 class="text-base sm:text-lg font-bold truncate text-amber-400" id="modal-despesa-title">Adicionar Despesa</h3>
+          <button onclick="closeDespesaModal()" class="w-8 h-8 rounded-lg bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center transition-all flex-shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <form id="form-despesa" class="p-4 sm:p-5 space-y-3 sm:space-y-4" onsubmit="saveDespesa(event)">
+          <input type="hidden" id="despesa-id">
+          
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Descrição da Despesa *</label>
+            <input type="text" id="despesa-descricao" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="Ex: Compra de material">
+          </div>
+          
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Valor *</label>
+            <input type="number" step="0.01" min="0" id="despesa-valor" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base" placeholder="0,00">
+          </div>
+
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Data *</label>
+            <input type="date" id="despesa-data" required class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base">
+          </div>
+
+          <div>
+            <label class="block text-xs sm:text-sm font-medium text-amber-400 mb-1.5">Categoria</label>
+            <select id="despesa-categoria" class="form-input w-full px-3 sm:px-4 py-2.5 rounded-xl text-sm sm:text-base">
+              <option value="Material">Material</option>
+              <option value="Mão de Obra">Mão de Obra</option>
+              <option value="Transporte">Transporte</option>
+              <option value="Aluguel">Aluguel</option>
+              <option value="Utilitários">Utilitários</option>
+              <option value="Outras">Outras</option>
+            </select>
+          </div>
+          
+          <div class="flex gap-2 sm:gap-3">
+            <button type="button" onclick="closeDespesaModal()" class="flex-1 px-3 sm:px-4 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 font-medium transition-all text-xs sm:text-sm">
+              Cancelar
+            </button>
+            <button type="submit" class="flex-1 btn-primary px-3 sm:px-4 py-2.5 rounded-xl font-medium text-white text-xs sm:text-sm" id="btn-despesa-text">
+              <span id="btn-despesa-text">Adicionar</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="modal-delete" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-3 sm:p-4">
+      <div class="bg-neutral-900 rounded-2xl w-full max-w-sm border border-amber-500/20 card-animate p-4 sm:p-6 text-center">
+        <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/20 flex items-center justify-center">
+          <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </div>
+        <h3 class="text-base sm:text-lg font-bold mb-2">Confirmar Exclusão</h3>
+        <p class="text-slate-400 text-xs sm:text-sm mb-4 sm:mb-6" id="delete-message">Tem certeza que deseja excluir este item?</p>
+        <div class="flex gap-2 sm:gap-3">
+          <button onclick="closeDeleteModal()" class="flex-1 px-3 sm:px-4 py-2.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 font-medium transition-all text-xs sm:text-sm">
+            Cancelar
+          </button>
+          <button onclick="confirmDelete()" class="flex-1 btn-danger px-3 sm:px-4 py-2.5 rounded-xl font-medium text-white text-xs sm:text-sm">
+            Excluir
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- PDF Preview Modal -->
+    <div id="modal-pdf" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-3 sm:p-4">
+      <div class="bg-neutral-900 rounded-2xl w-full max-w-4xl max-h-[90%] overflow-y-auto border border-amber-500/20 card-animate">
+        <div class="p-4 sm:p-5 border-b border-amber-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sticky top-0 bg-neutral-900 z-10">
+          <h3 class="text-base sm:text-lg font-bold truncate text-amber-400" id="modal-pdf-title">PDF</h3>
+          <div class="flex gap-2">
+            <button onclick="downloadPDF()" class="btn-primary px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium flex items-center justify-center gap-2 flex-shrink-0" id="btn-download-pdf">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+              </svg>
+              <span class="hidden sm:inline">Baixar PDF</span>
+            </button>
+            <button onclick="closePDFModal()" class="w-8 h-8 rounded-lg bg-neutral-800 hover:bg-neutral-700 flex items-center justify-center transition-all flex-shrink-0">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div id="pdf-preview" class="p-4 bg-white flex justify-center"></div>
+      </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2 px-3 sm:px-0"></div>
+    
+  </div>
+  
+  <script>
+    const defaultConfig = {
+      system_title: 'Gestão de Obras',
+      company_name: 'Cunha Reparos',
+      company_cnpj: '50.373.624/0001-22',
+      company_address: 'Rua Cândido Mariano, 302 - Centro Norte, Cuiabá – MT',
+      company_phone: '(65) 9 9820-2236',
+      company_email: 'cunhareparos2021@gmail.com',
+      company_tagline: 'Soluções para o seu dia a dia.',
+      primary_color: '#fbbf24'
+    };
+    
+    let clientes = [];
+    let obras = [];
+    let parcelas = [];
+    let despesas = [];
+    let servicosTemporarios = [];
+    let currentParcelaFilter = 'todas';
+    let deleteCallback = null;
+    let currentPDFType = null;
+    let currentObraIdForPDF = null;
+    let editingServicoId = null;
+
+    // localStorage Functions
+    function saveToLocalStorage() {
+      localStorage.setItem('cunha_clientes', JSON.stringify(clientes));
+      localStorage.setItem('cunha_obras', JSON.stringify(obras));
+      localStorage.setItem('cunha_parcelas', JSON.stringify(parcelas));
+      localStorage.setItem('cunha_despesas', JSON.stringify(despesas));
+    }
+
+    function loadFromLocalStorage() {
+      const storedClientes = localStorage.getItem('cunha_clientes');
+      const storedObras = localStorage.getItem('cunha_obras');
+      const storedParcelas = localStorage.getItem('cunha_parcelas');
+      const storedDespesas = localStorage.getItem('cunha_despesas');
+
+      if (storedClientes) clientes = JSON.parse(storedClientes);
+      if (storedObras) obras = JSON.parse(storedObras);
+      if (storedParcelas) parcelas = JSON.parse(storedParcelas);
+      if (storedDespesas) despesas = JSON.parse(storedDespesas);
+
+      showToast('✓ Dados carregados do localStorage');
+    }
+    
+    function formatCurrency(value) {
+      return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL'
+      }).format(value || 0);
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const date = new Date(dateStr + 'T00:00:00');
+      return date.toLocaleDateString('pt-BR');
+    }
+    
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+    
+    function getStatusClass(status) {
+      const classes = {
+        'Orçamento': 'status-orcamento',
+        'Aprovada': 'status-aprovada',
+        'Em andamento': 'status-andamento',
+        'Concluída': 'status-concluida',
+        'Cancelada': 'status-cancelada'
+      };
+      return classes[status] || 'bg-neutral-600';
+    }
+    
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      const bgColor = type === 'success' ? 'bg-emerald-500' : type === 'error' ? 'bg-red-500' : 'bg-amber-500';
+      const icon = type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ';
+      
+      toast.className = `toast ${bgColor} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-2 text-sm sm:text-base`;
+      toast.innerHTML = `<span class="font-bold">${icon}</span> <span>${message}</span>`;
+      
+      container.appendChild(toast);
+      
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(100px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+    
+    function openDespesaModal(despesa = null) {
+      document.getElementById('modal-despesa').classList.remove('hidden');
+      document.getElementById('modal-despesa-title').textContent = despesa ? 'Editar Despesa' : 'Adicionar Despesa';
+      
+      if (despesa) {
+        document.getElementById('despesa-id').value = despesa.id;
+        document.getElementById('despesa-descricao').value = despesa.descricao;
+        document.getElementById('despesa-valor').value = despesa.valor;
+        document.getElementById('despesa-data').value = despesa.data;
+        document.getElementById('despesa-categoria').value = despesa.categoria;
+      } else {
+        document.getElementById('form-despesa').reset();
+        document.getElementById('despesa-id').value = '';
+        document.getElementById('despesa-data').valueAsDate = new Date();
+      }
+    }
+    
+    function closeDespesaModal() {
+      document.getElementById('modal-despesa').classList.add('hidden');
+    }
+    
+    function saveDespesa(event) {
+      event.preventDefault();
+      
+      const id = document.getElementById('despesa-id').value;
+      const despesaData = {
+        id: id || generateId(),
+        descricao: document.getElementById('despesa-descricao').value.trim(),
+        valor: parseFloat(document.getElementById('despesa-valor').value) || 0,
+        data: document.getElementById('despesa-data').value,
+        categoria: document.getElementById('despesa-categoria').value
+      };
+      
+      if (id) {
+        const index = despesas.findIndex(d => d.id === id);
+        if (index !== -1) {
+          despesas[index] = despesaData;
+          showToast('Despesa atualizada com sucesso!');
+        }
+      } else {
+        despesas.push(despesaData);
+        showToast('Despesa cadastrada com sucesso!');
+      }
+      
+      saveToLocalStorage();
+      closeDespesaModal();
+      updateMonthlySales();
+      renderFinanceiro();
+    }
+    
+    function addServicoModal() {
+      editingServicoId = null;
+      document.getElementById('form-servico').reset();
+      document.getElementById('servico-id').value = '';
+      document.getElementById('servico-qnt').value = '1';
+      document.getElementById('btn-servico-text').textContent = 'Adicionar';
+      document.getElementById('modal-servico-title').textContent = 'Adicionar Serviço';
+      document.getElementById('modal-servico').classList.remove('hidden');
+    }
+    
+    function editServicoModal(id) {
+      const servico = servicosTemporarios.find(s => s.id === id);
+      if (!servico) return;
+      
+      editingServicoId = id;
+      document.getElementById('servico-id').value = id;
+      document.getElementById('servico-desc').value = servico.descricao;
+      document.getElementById('servico-tipo').value = servico.tipo;
+      document.getElementById('servico-qnt').value = servico.quantidade;
+      document.getElementById('servico-valor').value = servico.valorUnitario;
+      document.getElementById('btn-servico-text').textContent = 'Atualizar';
+      document.getElementById('modal-servico-title').textContent = 'Editar Serviço';
+      document.getElementById('modal-servico').classList.remove('hidden');
+    }
+    
+    function closeServicoModal() {
+      document.getElementById('modal-servico').classList.add('hidden');
+      editingServicoId = null;
+    }
+    
+    function addServico(event) {
+      event.preventDefault();
+      
+      const id = document.getElementById('servico-id').value;
+      const servico = {
+        id: id || generateId(),
+        descricao: document.getElementById('servico-desc').value.trim(),
+        tipo: document.getElementById('servico-tipo').value.trim(),
+        quantidade: parseFloat(document.getElementById('servico-qnt').value) || 1,
+        valorUnitario: parseFloat(document.getElementById('servico-valor').value) || 0
+      };
+      
+      servico.valorTotal = servico.quantidade * servico.valorUnitario;
+      
+      if (id) {
+        const index = servicosTemporarios.findIndex(s => s.id === id);
+        if (index !== -1) {
+          servicosTemporarios[index] = servico;
+          showToast('Serviço atualizado!');
+        }
+      } else {
+        servicosTemporarios.push(servico);
+        showToast('Serviço adicionado!');
+      }
+      
+      renderServicos();
+      closeServicoModal();
+    }
+    
+    function renderServicos() {
+      const container = document.getElementById('servicos-lista');
+      let totalObra = 0;
+      
+      if (servicosTemporarios.length === 0) {
+        container.innerHTML = '<div class="p-3 text-sm text-slate-500 text-center">Nenhum serviço adicionado</div>';
+        document.getElementById('obra-valor-calc').textContent = formatCurrency(0);
+        return;
+      }
+      
+      container.innerHTML = servicosTemporarios.map((servico, index) => {
+        totalObra += servico.valorTotal;
+        return `
+          <div class="hidden sm:grid grid-cols-12 gap-2 p-3 hover:bg-neutral-700/20 transition-all items-center border-b border-neutral-700/30 text-sm">
+            <div class="col-span-1 font-medium">${index + 1}</div>
+            <div class="col-span-3 truncate">${servico.descricao}</div>
+            <div class="col-span-2">${servico.tipo} ${servico.quantidade}</div>
+            <div class="col-span-2">${formatCurrency(servico.valorUnitario)}</div>
+            <div class="col-span-2 font-semibold text-amber-400">${formatCurrency(servico.valorTotal)}</div>
+            <div class="col-span-2 flex justify-center gap-1">
+              <button type="button" onclick="editServicoModal('${servico.id}')" class="p-1.5 rounded hover:bg-amber-500/20 text-amber-400 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </button>
+              <button type="button" onclick="removeServico('${servico.id}')" class="p-1.5 rounded hover:bg-red-500/20 text-red-400 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <div class="sm:hidden p-3 bg-neutral-800 rounded-lg mb-2 border border-amber-500/20 space-y-2">
+            <div>
+              <p class="text-xs text-slate-400">Descrição</p>
+              <p class="font-medium text-sm">${servico.descricao}</p>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <p class="text-xs text-slate-400">Tipo/Qnt</p>
+                <p class="font-medium text-sm">${servico.tipo} ${servico.quantidade}</p>
+              </div>
+              <div>
+                <p class="text-xs text-slate-400">Valor Unit.</p>
+                <p class="font-medium text-sm">${formatCurrency(servico.valorUnitario)}</p>
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <div class="flex-1">
+                <p class="text-xs text-slate-400">Total</p>
+                <p class="font-bold text-amber-400">${formatCurrency(servico.valorTotal)}</p>
+              </div>
+              <div class="flex gap-1 items-end">
+                <button type="button" onclick="editServicoModal('${servico.id}')" class="p-2 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 transition-all">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button type="button" onclick="removeServico('${servico.id}')" class="p-2 rounded bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-all">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+      
+      document.getElementById('obra-valor-calc').textContent = formatCurrency(totalObra);
+    }
+    
+    function removeServico(id) {
+      servicosTemporarios = servicosTemporarios.filter(s => s.id !== id);
+      renderServicos();
+      showToast('Serviço removido!');
+    }
+    
+    function gerarOrcamentoPDF(obraId) {
+      const obra = obras.find(o => o.id === obraId);
+      const cliente = clientes.find(c => c.id === obra.clienteId);
+      const obraParcelas = parcelas.filter(p => p.obraId === obraId);
+      const obraServicos = JSON.parse(obra.servicos || '[]');
+      
+      if (!obra || !cliente) return;
+      
+      const dataAtual = new Date().toLocaleDateString('pt-BR');
+      
+      let conteudoServicos = '';
+      if (obraServicos.length > 0) {
+        conteudoServicos = `
+          <table class="pdf-table">
+            <thead>
+              <tr>
+                <th>Cód.</th>
+                <th>Descrição</th>
+                <th>Tipo/Qnt</th>
+                <th>Valor Unit.</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${obraServicos.map((s, i) => `
+                <tr>
+                  <td>${i + 1}</td>
+                  <td>${s.descricao}</td>
+                  <td>${s.tipo} ${s.quantidade}</td>
+                  <td>${formatCurrency(s.valorUnitario)}</td>
+                  <td>${formatCurrency(s.valorTotal)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+      
+      let conteudoParcelas = '';
+      if (obraParcelas.length > 0) {
+        conteudoParcelas = `
+          <table class="pdf-table">
+            <thead>
+              <tr>
+                <th>Parcela</th>
+                <th>Valor</th>
+                <th>Vencimento</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${obraParcelas.map((p, i) => `
+                <tr>
+                  <td>${p.numero}</td>
+                  <td>${formatCurrency(p.valor)}</td>
+                  <td>${formatDate(p.vencimento)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+      
+      const enderecoCompleto = `${cliente.endereco}, ${cliente.numero}${cliente.complemento ? ' - ' + cliente.complemento : ''} - ${cliente.cidade}, ${cliente.cep}`;
+      
+      const conteudo = `
+        <div class="pdf-document">
+          <div class="pdf-header">
+            <div class="pdf-title">ORÇAMENTO</div>
+            <div class="pdf-subtitle">Documento nº ${generateId().toUpperCase().slice(0, 8)} | Data: ${dataAtual}</div>
+          </div>
+          
+          <div class="pdf-section">
+            <div class="pdf-section-title">INFORMAÇÕES DA EMPRESA</div>
+            <div class="pdf-row">
+              <div class="pdf-row-title">${defaultConfig.company_name}</div>
+              <div>CNPJ: ${defaultConfig.company_cnpj}</div>
+              <div>Endereço: ${defaultConfig.company_address}</div>
+              <div>Telefone: ${defaultConfig.company_phone}</div>
+              <div>E-mail: ${defaultConfig.company_email}</div>
+              <div style="margin-top: 8px; font-style: italic; color: #666;">${defaultConfig.company_tagline}</div>
+            </div>
+          </div>
+          
+          <div class="pdf-section">
+            <div class="pdf-section-title">DADOS DO CLIENTE</div>
+            <div class="pdf-row">
+              <div class="pdf-row-title">${cliente.nome}</div>
+              <div>Documento: ${cliente.documento}</div>
+              <div>Endereço: ${enderecoCompleto}</div>
+              <div>Telefone/WhatsApp: ${cliente.telefone}</div>
+            </div>
+          </div>
+          
+          ${conteudoServicos ? `
+            <div class="pdf-section">
+              <div class="pdf-section-title">SERVIÇOS ORÇADOS</div>
+              ${conteudoServicos}
+            </div>
+          ` : ''}
+          
+          <div class="pdf-section">
+            <div class="pdf-section-title">VALOR TOTAL</div>
+            <table class="pdf-table">
+              <tr>
+                <td style="font-weight: bold;">Valor Total da Obra:</td>
+                <td style="text-align: right; font-weight: bold;">${formatCurrency(obra.valor)}</td>
+              </tr>
+              ${obra.entrada > 0 ? `
+                <tr style="background: #f0f0f0;">
+                  <td>Entrada:</td>
+                  <td style="text-align: right;">${formatCurrency(obra.entrada)}</td>
+                </tr>
+              ` : ''}
+            </table>
+          </div>
+          
+          ${conteudoParcelas ? `
+            <div class="pdf-section">
+              <div class="pdf-section-title">PARCELAMENTO</div>
+              ${conteudoParcelas}
+            </div>
+          ` : ''}
+          
+          <div class="pdf-footer">
+            <p>Este orçamento é válido por 30 dias a partir da data de emissão.</p>
+            <p>Gerado em ${dataAtual} pelo Sistema de Gestão de Obras - ${defaultConfig.company_name}</p>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('pdf-preview').innerHTML = conteudo;
+      document.getElementById('modal-pdf-title').textContent = `Orçamento - ${obraServicos.length > 0 ? obraServicos[0].descricao : 'Obra'}`;
+      document.getElementById('modal-pdf').classList.remove('hidden');
+      
+      currentPDFType = 'orcamento';
+      currentObraIdForPDF = obraId;
+    }
+    
+    function gerarNotaServicoCompletaPDF(obraId) {
+      const obra = obras.find(o => o.id === obraId);
+      const cliente = clientes.find(c => c.id === obra.clienteId);
+      const obraParcelas = parcelas.filter(p => p.obraId === obraId);
+      const obraServicos = JSON.parse(obra.servicos || '[]');
+      
+      if (!obra || !cliente) return;
+      
+      const dataAtual = new Date().toLocaleDateString('pt-BR');
+      let totalPago = 0;
+      let totalPendente = 0;
+      
+      if (obra.entradaPaga && obra.entrada > 0) {
+        totalPago += parseFloat(obra.entrada) || 0;
+      } else if (obra.entrada > 0) {
+        totalPendente += parseFloat(obra.entrada) || 0;
+      }
+      
+      const parcelasPagas = obraParcelas.filter(p => p.status === 'Pago').reduce((sum, p) => sum + parseFloat(p.valor), 0);
+      totalPago += parcelasPagas;
+      
+      const parcelasPendentes = obraParcelas.filter(p => p.status === 'Pendente').reduce((sum, p) => sum + parseFloat(p.valor), 0);
+      totalPendente += parcelasPendentes;
+      
+      const enderecoCompleto = `${cliente.endereco}, ${cliente.numero}${cliente.complemento ? ' - ' + cliente.complemento : ''} - ${cliente.cidade}, ${cliente.cep}`;
+      
+      let conteudoServicos = '';
+      if (obraServicos.length > 0) {
+        conteudoServicos = `
+          <table class="pdf-table">
+            <thead>
+              <tr>
+                <th>Descrição</th>
+                <th>Tipo/Qnt</th>
+                <th>Valor Unit.</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${obraServicos.map(s => `
+                <tr>
+                  <td>${s.descricao}</td>
+                  <td>${s.tipo} ${s.quantidade}</td>
+                  <td>${formatCurrency(s.valorUnitario)}</td>
+                  <td>${formatCurrency(s.valorTotal)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      }
+      
+      const conteudo = `
+        <div class="pdf-document">
+          <div class="pdf-header">
+            <div class="pdf-title">NOTA DE SERVIÇO - OBRA CONCLUÍDA</div>
+            <div class="pdf-subtitle">Documento nº ${generateId().toUpperCase().slice(0, 8)} | Data: ${dataAtual}</div>
+          </div>
+          
+          <div class="pdf-section">
+            <div class="pdf-section-title">INFORMAÇÕES DA EMPRESA</div>
+            <div class="pdf-row">
+              <div class="pdf-row-title">${defaultConfig.company_name}</div>
+              <div>CNPJ: ${defaultConfig.company_cnpj}</div>
+              <div>Endereço: ${defaultConfig.company_address}</div>
+              <div>Telefone: ${defaultConfig.company_phone}</div>
+              <div>E-mail: ${defaultConfig.company_email}</div>
+              <div style="margin-top: 8px; font-style: italic; color: #666;">${defaultConfig.company_tagline}</div>
+            </div>
+          </div>
+          
+          <div class="pdf-section">
+            <div class="pdf-section-title">DADOS DO CLIENTE</div>
+            <div class="pdf-row">
+              <div class="pdf-row-title">${cliente.nome}</div>
+              <div>Documento: ${cliente.documento}</div>
+              <div>Endereço: ${enderecoCompleto}</div>
+              <div>Telefone/WhatsApp: ${cliente.telefone}</div>
+            </div>
+          </div>
+          
+          ${conteudoServicos ? `
+            <div class="pdf-section">
+              <div class="pdf-section-title">SERVIÇOS REALIZADOS</div>
+              ${conteudoServicos}
+            </div>
+          ` : ''}
+          
+          <div class="pdf-section">
+            <div class="pdf-section-title">RESUMO FINANCEIRO DETALHADO</div>
+            <table class="pdf-table">
+              <tr style="background: #f0f0f0; font-weight: bold;">
+                <td colspan="2" style="text-align: center; font-size: 12px;">CÁLCULO DO SALDO</td>
+              </tr>
+              <tr>
+                <td>Valor Total da Obra:</td>
+                <td style="text-align: right; color: #f59e0b; font-weight: bold;">${formatCurrency(obra.valor)}</td>
+              </tr>
+              <tr style="border-top: 2px solid #ddd;">
+                <td style="color: #065f46; font-weight: bold;">(-) Valor Recebido:</td>
+                <td style="text-align: right; color: #065f46; font-weight: bold;">${formatCurrency(totalPago)}</td>
+              </tr>
+              <tr style="background: #fee2e2; font-weight: bold; border-top: 2px solid #dc2626;">
+                <td style="color: #991b1b;">(=) SALDO A RECEBER:</td>
+                <td style="text-align: right; color: #991b1b; font-size: 14px;">${formatCurrency(totalPendente)}</td>
+              </tr>
+            </table>
+          </div>
+          
+          <div class="pdf-section">
+            <div style="background: #d1fae5; border: 2px solid #10b981; padding: 20px; text-align: center; border-radius: 8px;">
+              <div style="font-size: 16px; font-weight: bold; color: #065f46; margin-bottom: 10px;">SERVIÇO CONCLUÍDO COM ÊXITO</div>
+              <div style="color: #065f46;">Esta obra foi finalizada conforme os termos acordados e todas as obrigações foram cumpridas.</div>
+            </div>
+          </div>
+          
+          <div class="pdf-footer">
+            <p>Documento emitido em ${dataAtual} pelo Sistema de Gestão de Obras - ${defaultConfig.company_name}</p>
+            <p>Obrigado pela confiança! Conte conosco para futuras obras.</p>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('pdf-preview').innerHTML = conteudo;
+      document.getElementById('modal-pdf-title').textContent = `Nota de Serviço - Obra Concluída`;
+      document.getElementById('modal-pdf').classList.remove('hidden');
+      
+      currentPDFType = 'notaservico';
+      currentObraIdForPDF = obraId;
+    }
+    
+    function downloadPDF() {
+      const btn = document.getElementById('btn-download-pdf');
+      const originalText = btn.innerHTML;
+      
+      btn.disabled = true;
+      btn.innerHTML = '<div class="loading-spinner"></div>';
+      
+      const timestamp = new Date().toISOString().split('T')[0];
+      const randomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      const filename = currentPDFType === 'orcamento' 
+        ? `Orcamento_${timestamp}_${randomId}.pdf` 
+        : `NotaServico_${timestamp}_${randomId}.pdf`;
+      
+      try {
+        const element = document.getElementById('pdf-preview');
+        const opt = {
+          margin: 0,
+          filename: filename,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false, allowTaint: true, backgroundColor: '#ffffff' },
+          jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+        };
+        
+        html2pdf().set(opt).from(element).save().then(() => {
+          showToast('✓ PDF baixado com sucesso!');
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }).catch((error) => {
+          console.error('Erro ao gerar PDF:', error);
+          showToast('Erro ao gerar PDF! Tente novamente.', 'error');
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        });
+        
+      } catch (error) {
+        console.error('Erro ao processar:', error);
+        showToast('Erro ao gerar PDF! Tente novamente.', 'error');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+    
+    function closePDFModal() {
+      document.getElementById('modal-pdf').classList.add('hidden');
+      currentPDFType = null;
+      currentObraIdForPDF = null;
+    }
+    
+    function showSection(sectionName) {
+      document.querySelectorAll('.section-content').forEach(s => s.classList.add('hidden'));
+      
+      document.querySelectorAll('.tab-btn').forEach(t => {
+        t.classList.remove('tab-active');
+        t.classList.add('bg-neutral-900', 'hover:bg-neutral-800', 'text-amber-400');
+      });
+      
+      const section = document.getElementById(`section-${sectionName}`);
+      if (section) {
+        section.classList.remove('hidden');
+        section.classList.add('card-animate');
+      }
+      
+      const tab = document.getElementById(`tab-${sectionName}`);
+      if (tab) {
+        tab.classList.add('tab-active');
+        tab.classList.remove('bg-neutral-900', 'hover:bg-neutral-800', 'text-amber-400');
+      }
+      
+      if (sectionName === 'dashboard') updateDashboard();
+      if (sectionName === 'clientes') renderClientes();
+      if (sectionName === 'obras') renderObras();
+      if (sectionName === 'financeiro') renderFinanceiro();
+    }
+    
+    function updateDashboard() {
+      let totalRecebido = 0;
+      let totalAReceber = 0;
+      let obrasAndamento = 0;
+      let obrasConcluidas = 0;
+      
+      obras.forEach(obra => {
+        if (obra.status === 'Em andamento') obrasAndamento++;
+        if (obra.status === 'Concluída') obrasConcluidas++;
+      });
+      
+      parcelas.forEach(parcela => {
+        if (parcela.status === 'Pago') {
+          totalRecebido += parseFloat(parcela.valor) || 0;
+        } else {
+          totalAReceber += parseFloat(parcela.valor) || 0;
+        }
+      });
+      
+      obras.forEach(obra => {
+        if (obra.entradaPaga && obra.entrada > 0) {
+          totalRecebido += parseFloat(obra.entrada);
+        } else if (!obra.entradaPaga && obra.entrada > 0) {
+          totalAReceber += parseFloat(obra.entrada);
+        }
+      });
+      
+      document.getElementById('stat-recebido').textContent = formatCurrency(totalRecebido);
+      document.getElementById('stat-receber').textContent = formatCurrency(totalAReceber);
+      document.getElementById('stat-andamento').textContent = obrasAndamento;
+      document.getElementById('stat-concluidas').textContent = obrasConcluidas;
+      
+      const recentObras = document.getElementById('recent-obras');
+      const recentObrasList = obras.slice(-5).reverse();
+      
+      if (recentObrasList.length === 0) {
+        recentObras.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Nenhuma obra cadastrada</p>';
+      } else {
+        recentObras.innerHTML = recentObrasList.map(obra => {
+          const cliente = clientes.find(c => c.id === obra.clienteId);
+          const obraServicos = JSON.parse(obra.servicos || '[]');
+          const descricao = obraServicos.length > 0 ? obraServicos[0].descricao : 'Obra sem serviços';
+          return `
+            <div class="flex items-center justify-between p-3 bg-neutral-800 rounded-xl gap-2">
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-sm truncate">${descricao.substring(0, 30)}${descricao.length > 30 ? '...' : ''}</p>
+                <p class="text-xs text-slate-400 truncate">${cliente ? cliente.nome : 'Cliente não encontrado'}</p>
+              </div>
+              <span class="px-2 py-1 rounded-lg text-xs font-medium ${getStatusClass(obra.status)} flex-shrink-0 whitespace-nowrap">${obra.status}</span>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      const upcomingParcelas = document.getElementById('upcoming-parcelas');
+      const pendingParcelas = parcelas
+        .filter(p => p.status === 'Pendente')
+        .sort((a, b) => new Date(a.vencimento) - new Date(b.vencimento))
+        .slice(0, 5);
+      
+      if (pendingParcelas.length === 0) {
+        upcomingParcelas.innerHTML = '<p class="text-slate-500 text-sm text-center py-4">Nenhuma parcela pendente</p>';
+      } else {
+        upcomingParcelas.innerHTML = pendingParcelas.map(parcela => {
+          const obra = obras.find(o => o.id === parcela.obraId);
+          const isOverdue = new Date(parcela.vencimento) < new Date();
+          return `
+            <div class="flex items-center justify-between p-3 bg-neutral-800 rounded-xl gap-2 ${isOverdue ? 'border border-red-500/50' : ''}">
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-sm">${formatCurrency(parcela.valor)}</p>
+                <p class="text-xs text-slate-400 truncate">${obra ? obra.descricao : 'Obra'} - Parcela ${parcela.numero}</p>
+              </div>
+              <div class="text-right flex-shrink-0">
+                <p class="text-xs sm:text-sm ${isOverdue ? 'text-red-400' : 'text-slate-300'} whitespace-nowrap">${formatDate(parcela.vencimento)}</p>
+                ${isOverdue ? '<p class="text-xs text-red-400">Vencida</p>' : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+    
+    function renderClientes(filter = '') {
+      const container = document.getElementById('clientes-list');
+      let filteredClientes = clientes;
+      
+      if (filter) {
+        const searchTerm = filter.toLowerCase();
+        filteredClientes = clientes.filter(c => 
+          c.nome.toLowerCase().includes(searchTerm) ||
+          c.documento.includes(searchTerm)
+        );
+      }
+      
+      if (filteredClientes.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-center py-8">Nenhum cliente encontrado</p>';
+        return;
+      }
+      
+      container.innerHTML = filteredClientes.map(cliente => {
+        const clienteObras = obras.filter(o => o.clienteId === cliente.id);
+        const enderecoCompleto = `${cliente.endereco}, ${cliente.numero}${cliente.complemento ? ' ' + cliente.complemento : ''}`;
+        
+        return `
+          <div class="bg-neutral-900 rounded-xl p-3 sm:p-4 border border-amber-500/20 hover:border-amber-500/40 transition-all card-animate">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+              <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center flex-shrink-0">
+                  <span class="text-xl">👤</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <h3 class="font-semibold text-sm sm:text-base truncate">${cliente.nome}</h3>
+                  <p class="text-xs sm:text-sm text-slate-400 truncate">${cliente.documento}</p>
+                  <p class="text-xs text-slate-500 truncate">${enderecoCompleto}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+                <span class="text-xs px-2 py-1 bg-neutral-800 rounded-lg whitespace-nowrap text-amber-400">${clienteObras.length} obra${clienteObras.length !== 1 ? 's' : ''}</span>
+                <button onclick="editCliente('${cliente.id}')" class="p-1.5 sm:p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-all">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                  </svg>
+                </button>
+                <button onclick="requestDeleteCliente('${cliente.id}')" class="p-1.5 sm:p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-all">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-amber-500/10 grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-2 text-xs sm:text-sm">
+              <div class="flex items-center gap-2 text-slate-400 truncate">
+                <span>☎️</span> <span class="truncate">${cliente.telefone}</span>
+              </div>
+              <div class="flex items-center gap-2 text-slate-400 truncate">
+                <span>📍</span> <span class="truncate">${cliente.cidade}</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function filterClientes() {
+      const search = document.getElementById('search-cliente').value;
+      renderClientes(search);
+    }
+    
+    function openClienteModal(cliente = null) {
+      document.getElementById('modal-cliente').classList.remove('hidden');
+      document.getElementById('modal-cliente-title').textContent = cliente ? 'Editar Cliente' : 'Novo Cliente';
+      
+      if (cliente) {
+        document.getElementById('cliente-id').value = cliente.id;
+        document.getElementById('cliente-nome').value = cliente.nome;
+        document.getElementById('cliente-documento').value = cliente.documento;
+        document.getElementById('cliente-endereco').value = cliente.endereco || '';
+        document.getElementById('cliente-numero').value = cliente.numero || '';
+        document.getElementById('cliente-complemento').value = cliente.complemento || '';
+        document.getElementById('cliente-cidade').value = cliente.cidade || '';
+        document.getElementById('cliente-cep').value = cliente.cep || '';
+        document.getElementById('cliente-telefone').value = cliente.telefone;
+      } else {
+        document.getElementById('form-cliente').reset();
+        document.getElementById('cliente-id').value = '';
+      }
+    }
+    
+    function closeClienteModal() {
+      document.getElementById('modal-cliente').classList.add('hidden');
+    }
+    
+    function editCliente(id) {
+      const cliente = clientes.find(c => c.id === id);
+      if (cliente) openClienteModal(cliente);
+    }
+    
+    function saveCliente(event) {
+      event.preventDefault();
+      
+      const id = document.getElementById('cliente-id').value;
+      const clienteData = {
+        id: id || generateId(),
+        nome: document.getElementById('cliente-nome').value.trim(),
+        documento: document.getElementById('cliente-documento').value.trim(),
+        endereco: document.getElementById('cliente-endereco').value.trim(),
+        numero: document.getElementById('cliente-numero').value.trim(),
+        complemento: document.getElementById('cliente-complemento').value.trim(),
+        cidade: document.getElementById('cliente-cidade').value.trim(),
+        cep: document.getElementById('cliente-cep').value.trim(),
+        telefone: document.getElementById('cliente-telefone').value.trim()
+      };
+      
+      if (id) {
+        const index = clientes.findIndex(c => c.id === id);
+        if (index !== -1) {
+          clientes[index] = clienteData;
+          showToast('Cliente atualizado com sucesso!');
+        }
+      } else {
+        clientes.push(clienteData);
+        showToast('Cliente cadastrado com sucesso!');
+      }
+      
+      saveToLocalStorage();
+      closeClienteModal();
+      renderClientes();
+      updateClienteSelects();
+    }
+    
+    function requestDeleteCliente(id) {
+      const cliente = clientes.find(c => c.id === id);
+      const clienteObras = obras.filter(o => o.clienteId === id);
+      
+      if (clienteObras.length > 0) {
+        showToast('Não é possível excluir cliente com obras cadastradas!', 'error');
+        return;
+      }
+      
+      document.getElementById('delete-message').textContent = `Deseja excluir o cliente "${cliente.nome}"?`;
+      document.getElementById('modal-delete').classList.remove('hidden');
+      deleteCallback = () => deleteCliente(id);
+    }
+    
+    function deleteCliente(id) {
+      clientes = clientes.filter(c => c.id !== id);
+      saveToLocalStorage();
+      showToast('Cliente excluído com sucesso!');
+    }
+    
+    function renderObras(statusFilter = '', searchFilter = '') {
+      const container = document.getElementById('obras-list');
+      let filteredObras = obras;
+      
+      if (statusFilter) {
+        filteredObras = filteredObras.filter(o => o.status === statusFilter);
+      }
+      
+      if (searchFilter) {
+        const searchTerm = searchFilter.toLowerCase();
+        filteredObras = filteredObras.filter(o => {
+          const obraServicos = JSON.parse(o.servicos || '[]');
+          const descricaoObra = obraServicos.length > 0 ? obraServicos[0].descricao : '';
+          return descricaoObra.toLowerCase().includes(searchTerm);
+        });
+      }
+      
+      if (filteredObras.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-center py-8">Nenhuma obra encontrada</p>';
+        return;
+      }
+      
+      container.innerHTML = filteredObras.map(obra => {
+        const cliente = clientes.find(c => c.id === obra.clienteId);
+        const obraServicos = JSON.parse(obra.servicos || '[]');
+        const descricaoObra = obraServicos.length > 0 ? obraServicos[0].descricao : 'Obra sem serviços';
+        const obraParcelas = parcelas.filter(p => p.obraId === obra.id);
+        const pagas = obraParcelas.filter(p => p.status === 'Pago').reduce((sum, p) => sum + parseFloat(p.valor), 0);
+        const entradaPaga = obra.entradaPaga ? parseFloat(obra.entrada) || 0 : 0;
+        const totalPago = pagas + entradaPaga;
+        const saldoDevedor = (parseFloat(obra.valor) || 0) - totalPago;
+        
+        return `
+          <div class="bg-neutral-900 rounded-xl border border-amber-500/20 hover:border-amber-500/40 transition-all overflow-hidden card-animate">
+            <div class="p-3 sm:p-4">
+              <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2 sm:gap-3 mb-3">
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center gap-2 mb-1 flex-wrap">
+                    <span class="px-2 py-0.5 rounded-lg text-xs font-medium ${getStatusClass(obra.status)}">${obra.status}</span>
+                  </div>
+                  <h3 class="font-semibold text-sm sm:text-lg">${descricaoObra}</h3>
+                  <p class="text-xs sm:text-sm text-slate-400 truncate">👤 ${cliente ? cliente.nome : 'Cliente não encontrado'}</p>
+                  <p class="text-xs text-slate-500 mt-1">${obraServicos.length} serviço${obraServicos.length !== 1 ? 's' : ''}</p>
+                </div>
+                <div class="flex items-center gap-1 flex-shrink-0 flex-wrap justify-end">
+                  ${obra.status === 'Orçamento' ? `
+                    <button onclick="gerarOrcamentoPDF('${obra.id}')" class="p-1.5 sm:p-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 transition-all">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2m0 0v-8m0 8l-6-4m6 4l6-4"/>
+                      </svg>
+                    </button>
+                  ` : ''}
+                  ${obra.status === 'Concluída' ? `
+                    <button onclick="gerarNotaServicoCompletaPDF('${obra.id}')" class="p-1.5 sm:p-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 transition-all">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                      </svg>
+                    </button>
+                  ` : ''}
+                  <button onclick="editObra('${obra.id}')" class="p-1.5 sm:p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </button>
+                  <button onclick="requestDeleteObra('${obra.id}')" class="p-1.5 sm:p-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 text-xs sm:text-sm">
+                <div>
+                  <p class="text-slate-500 text-xs">Valor Total</p>
+                  <p class="font-semibold text-amber-400">${formatCurrency(obra.valor)}</p>
+                </div>
+                <div>
+                  <p class="text-slate-500 text-xs">Pago</p>
+                  <p class="font-semibold text-emerald-400">${formatCurrency(totalPago)}</p>
+                </div>
+                <div>
+                  <p class="text-slate-500 text-xs">Saldo</p>
+                  <p class="font-semibold ${saldoDevedor > 0 ? 'text-red-400' : 'text-emerald-400'}">${formatCurrency(saldoDevedor)}</p>
+                </div>
+                <div>
+                  <p class="text-slate-500 text-xs">Parcelas</p>
+                  <p class="font-semibold">${obraParcelas.filter(p => p.status === 'Pago').length}/${obraParcelas.length}</p>
+                </div>
+              </div>
+              
+              ${obra.dataInicio || obra.dataTermino ? `
+                <div class="mt-3 pt-3 border-t border-amber-500/10 flex flex-wrap gap-2 text-xs sm:text-sm text-slate-400">
+                  ${obra.dataInicio ? `<span>📅 Início: ${formatDate(obra.dataInicio)}</span>` : ''}
+                  ${obra.dataTermino ? `<span>🏁 Término: ${formatDate(obra.dataTermino)}</span>` : ''}
+                </div>
+              ` : ''}
+              
+              ${obra.status === 'Orçamento' ? `
+                <div class="mt-4 pt-4 border-t border-amber-500/10 flex gap-2 flex-col sm:flex-row">
+                  <button onclick="aprovarObra('${obra.id}')" class="flex-1 px-3 py-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 font-medium text-xs sm:text-sm transition-all">
+                    ✓ Aprovado
+                  </button>
+                  <button onclick="requestCancelObra('${obra.id}')" class="flex-1 px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 font-medium text-xs sm:text-sm transition-all">
+                    ✕ Cancelar
+                  </button>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function filterObras() {
+      const status = document.getElementById('filter-status-obra').value;
+      const search = document.getElementById('search-obra').value;
+      renderObras(status, search);
+    }
+    
+    function updateClienteSelects() {
+      const selects = [
+        document.getElementById('obra-cliente'),
+        document.getElementById('filter-obra-financeiro')
+      ];
+      
+      selects.forEach((select, index) => {
+        if (!select) return;
+        
+        const currentValue = select.value;
+        
+        if (index === 0) {
+          select.innerHTML = '<option value="">Selecione um cliente</option>' +
+            clientes.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+        } else {
+          select.innerHTML = '<option value="">Todas as Obras</option>' +
+            obras.map(o => {
+              const cliente = clientes.find(c => c.id === o.clienteId);
+              const obraServicos = JSON.parse(o.servicos || '[]');
+              const descricao = obraServicos.length > 0 ? obraServicos[0].descricao : 'Obra sem serviços';
+              return `<option value="${o.id}">${descricao} (${cliente ? cliente.nome : 'N/A'})</option>`;
+            }).join('');
+        }
+        
+        if (currentValue) select.value = currentValue;
+      });
+    }
+    
+    function openObraModal(obra = null) {
+      updateClienteSelects();
+      servicosTemporarios = [];
+      document.getElementById('modal-obra').classList.remove('hidden');
+      document.getElementById('modal-obra-title').textContent = obra ? 'Editar Obra' : 'Nova Obra';
+      
+      if (obra) {
+        document.getElementById('obra-id').value = obra.id;
+        document.getElementById('obra-cliente').value = obra.clienteId;
+        servicosTemporarios = JSON.parse(obra.servicos || '[]');
+        document.getElementById('obra-status').value = obra.status;
+        document.getElementById('obra-inicio').value = obra.dataInicio || '';
+        document.getElementById('obra-termino').value = obra.dataTermino || '';
+        document.getElementById('obra-entrada').value = obra.entrada || '';
+        document.getElementById('obra-parcelas').value = obra.numParcelas || '';
+        document.getElementById('obra-primeiro-venc').value = obra.primeiroVencimento || '';
+      } else {
+        document.getElementById('form-obra').reset();
+        document.getElementById('obra-id').value = '';
+      }
+      
+      renderServicos();
+    }
+    
+    function closeObraModal() {
+      document.getElementById('modal-obra').classList.add('hidden');
+      servicosTemporarios = [];
+    }
+    
+    function editObra(id) {
+      const obra = obras.find(o => o.id === id);
+      if (obra) openObraModal(obra);
+    }
+    
+    function saveObra(event) {
+      event.preventDefault();
+      
+      if (servicosTemporarios.length === 0) {
+        showToast('Adicione pelo menos um serviço à obra!', 'error');
+        return;
+      }
+      
+      const id = document.getElementById('obra-id').value;
+      const valorTotal = servicosTemporarios.reduce((sum, s) => sum + (s.valorTotal || 0), 0);
+      const entrada = parseFloat(document.getElementById('obra-entrada').value) || 0;
+      const numParcelas = parseInt(document.getElementById('obra-parcelas').value) || 0;
+      const primeiroVencimento = document.getElementById('obra-primeiro-venc').value;
+      
+      const obraData = {
+        id: id || generateId(),
+        clienteId: document.getElementById('obra-cliente').value,
+        servicos: JSON.stringify(servicosTemporarios),
+        valor: valorTotal,
+        status: document.getElementById('obra-status').value,
+        dataInicio: document.getElementById('obra-inicio').value,
+        dataTermino: document.getElementById('obra-termino').value,
+        entrada: entrada,
+        entradaPaga: id ? (obras.find(o => o.id === id)?.entradaPaga || false) : false,
+        numParcelas: numParcelas,
+        primeiroVencimento: primeiroVencimento,
+        descricao: servicosTemporarios.length > 0 ? servicosTemporarios[0].descricao : 'Obra'
+      };
+      
+      if (id) {
+        const index = obras.findIndex(o => o.id === id);
+        if (index !== -1) {
+          obras[index] = obraData;
+          
+          const obraParcelas = parcelas.filter(p => p.obraId === id);
+          parcelas = parcelas.filter(p => p.obraId !== id);
+          
+          if (numParcelas > 0 && primeiroVencimento) {
+            const valorParcela = (valorTotal - entrada) / numParcelas;
+            const dataBase = new Date(primeiroVencimento + 'T00:00:00');
+            
+            for (let i = 0; i < numParcelas; i++) {
+              const vencimento = new Date(dataBase);
+              vencimento.setMonth(vencimento.getMonth() + i);
+              
+              parcelas.push({
+                id: generateId(),
+                obraId: id,
+                numero: i + 1,
+                valor: valorParcela,
+                vencimento: vencimento.toISOString().split('T')[0],
+                status: 'Pendente'
+              });
+            }
+          }
+          
+          showToast('✓ Orçamento atualizado com sucesso!');
+          updateDashboard();
+          renderFinanceiro();
+        }
+      } else {
+        obras.push(obraData);
+        showToast('Obra cadastrada com sucesso!');
+        
+        if (numParcelas > 0 && primeiroVencimento) {
+          const valorParcela = (valorTotal - entrada) / numParcelas;
+          const dataBase = new Date(primeiroVencimento + 'T00:00:00');
+          
+          for (let i = 0; i < numParcelas; i++) {
+            const vencimento = new Date(dataBase);
+            vencimento.setMonth(vencimento.getMonth() + i);
+            
+            parcelas.push({
+              id: generateId(),
+              obraId: obraData.id,
+              numero: i + 1,
+              valor: valorParcela,
+              vencimento: vencimento.toISOString().split('T')[0],
+              status: 'Pendente'
+            });
+          }
+        }
+      }
+      
+      saveToLocalStorage();
+      closeObraModal();
+      renderObras();
+      updateClienteSelects();
+    }
+    
+    function requestDeleteObra(id) {
+      const obra = obras.find(o => o.id === id);
+      const obraServicos = JSON.parse(obra.servicos || '[]');
+      const descricao = obraServicos.length > 0 ? obraServicos[0].descricao : 'Obra';
+      document.getElementById('delete-message').textContent = `Deseja excluir a obra "${descricao}"? As parcelas associadas também serão excluídas.`;
+      document.getElementById('modal-delete').classList.remove('hidden');
+      deleteCallback = () => deleteObra(id);
+    }
+    
+    function deleteObra(id) {
+      obras = obras.filter(o => o.id !== id);
+      parcelas = parcelas.filter(p => p.obraId !== id);
+      saveToLocalStorage();
+      showToast('Obra excluída com sucesso!');
+    }
+    
+    function aprovarObra(id) {
+      const index = obras.findIndex(o => o.id === id);
+      if (index !== -1 && obras[index].status === 'Orçamento') {
+        obras[index].status = 'Aprovada';
+        saveToLocalStorage();
+        showToast('✓ Orçamento aprovado!');
+        renderObras();
+        updateDashboard();
+      }
+    }
+    
+    function requestCancelObra(id) {
+      const obra = obras.find(o => o.id === id);
+      const obraServicos = JSON.parse(obra.servicos || '[]');
+      const descricao = obraServicos.length > 0 ? obraServicos[0].descricao : 'Obra';
+      document.getElementById('delete-message').textContent = `Deseja cancelar o orçamento de "${descricao}"? Esta ação não pode ser desfeita.`;
+      document.getElementById('modal-delete').classList.remove('hidden');
+      deleteCallback = () => cancelObra(id);
+    }
+    
+    function cancelObra(id) {
+      deleteObra(id);
+      showToast('✕ Orçamento cancelado!');
+    }
+    
+    function generateMonthOptions() {
+      const selectMes = document.getElementById('select-mes-venda');
+      const selectMesDespesa = document.getElementById('select-mes-despesa');
+      if (!selectMes || !selectMesDespesa) return;
+      
+      const meses = [
+        'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+        'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+      ];
+      
+      const anoAtual = new Date().getFullYear();
+      const mesAtual = new Date().getMonth();
+      
+      [selectMes, selectMesDespesa].forEach(select => {
+        select.innerHTML = '<option value="">Selecione o mês...</option>';
+        
+        for (let ano = anoAtual - 2; ano <= anoAtual; ano++) {
+          for (let mes = 0; mes < 12; mes++) {
+            if (ano < anoAtual || mes <= mesAtual) {
+              const value = `${ano}-${String(mes + 1).padStart(2, '0')}`;
+              const label = `${meses[mes]} de ${ano}`;
+              const option = document.createElement('option');
+              option.value = value;
+              option.textContent = label;
+              select.appendChild(option);
+            }
+          }
+        }
+      });
+      
+      const mesAtualValue = `${anoAtual}-${String(mesAtual + 1).padStart(2, '0')}`;
+      selectMes.value = mesAtualValue;
+      selectMesDespesa.value = mesAtualValue;
+    }
+    
+    function updateMonthlySales() {
+      const mesSelecionado = document.getElementById('select-mes-venda').value;
+      const mesDespesaSelecionado = document.getElementById('select-mes-despesa').value;
+      
+      if (!mesSelecionado) {
+        document.getElementById('monthly-total').textContent = 'R$ 0,00';
+        document.getElementById('monthly-received').textContent = 'R$ 0,00';
+        document.getElementById('monthly-pending').textContent = 'R$ 0,00';
+        document.getElementById('monthly-obras').textContent = '0';
+      } else {
+        const [ano, mes] = mesSelecionado.split('-');
+        let totalMes = 0;
+        let recebidoMes = 0;
+        let obrasMes = 0;
+        
+        obras.forEach(obra => {
+          if (obra.dataInicio) {
+            const dataObra = new Date(obra.dataInicio + 'T00:00:00');
+            if (dataObra.getFullYear() === parseInt(ano) && (dataObra.getMonth() + 1) === parseInt(mes)) {
+              totalMes += parseFloat(obra.valor) || 0;
+              obrasMes++;
+              
+              if (obra.entradaPaga && obra.entrada > 0) {
+                recebidoMes += parseFloat(obra.entrada) || 0;
+              }
+            }
+          }
+        });
+        
+        parcelas.forEach(parcela => {
+          const dataParcela = new Date(parcela.vencimento + 'T00:00:00');
+          if (dataParcela.getFullYear() === parseInt(ano) && (dataParcela.getMonth() + 1) === parseInt(mes)) {
+            if (parcela.status === 'Pago') {
+              recebidoMes += parseFloat(parcela.valor) || 0;
+            }
+          }
+        });
+        
+        const pendenteMes = totalMes - recebidoMes;
+        
+        document.getElementById('monthly-total').textContent = formatCurrency(totalMes);
+        document.getElementById('monthly-received').textContent = formatCurrency(recebidoMes);
+        document.getElementById('monthly-pending').textContent = formatCurrency(pendenteMes);
+        document.getElementById('monthly-obras').textContent = obrasMes;
+      }
+      
+      if (!mesDespesaSelecionado) {
+        document.getElementById('monthly-expenses').textContent = 'R$ 0,00';
+        document.getElementById('net-profit').textContent = 'R$ 0,00';
+      } else {
+        const [ano, mes] = mesDespesaSelecionado.split('-');
+        let despesasMes = 0;
+        
+        despesas.forEach(despesa => {
+          const dataDespesa = new Date(despesa.data + 'T00:00:00');
+          if (dataDespesa.getFullYear() === parseInt(ano) && (dataDespesa.getMonth() + 1) === parseInt(mes)) {
+            despesasMes += parseFloat(despesa.valor) || 0;
+          }
+        });
+        
+        const mesSelecionadoVenda = document.getElementById('select-mes-venda').value;
+        let receitaMes = 0;
+        
+        if (mesSelecionadoVenda === mesDespesaSelecionado) {
+          const elementMonthlyReceived = document.getElementById('monthly-received').textContent;
+          receitaMes = parseFloat(elementMonthlyReceived.replace('R$', '').replace(',', '.').trim()) || 0;
+        }
+        
+        const lucroLiquido = receitaMes - despesasMes;
+        
+        document.getElementById('monthly-expenses').textContent = formatCurrency(despesasMes);
+        document.getElementById('net-profit').textContent = formatCurrency(lucroLiquido);
+      }
+    }
+    
+    function renderBestClients() {
+      const container = document.getElementById('best-clients-list');
+      
+      const clientesRanking = clientes
+        .map(cliente => {
+          const clienteObras = obras.filter(o => o.clienteId === cliente.id);
+          const totalObrasCliente = clienteObras.reduce((sum, o) => sum + (parseFloat(o.valor) || 0), 0);
+          const quantidadeObras = clienteObras.length;
+          
+          return {
+            ...cliente,
+            totalGasto: totalObrasCliente,
+            quantidadeObras: quantidadeObras
+          };
+        })
+        .sort((a, b) => b.quantidadeObras - a.quantidadeObras);
+      
+      if (clientesRanking.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-sm text-center py-4 sm:py-6">Nenhum cliente cadastrado</p>';
+        return;
+      }
+      
+      container.innerHTML = clientesRanking.slice(0, 5).map((cliente, index) => {
+        const medalhas = ['🥇', '🥈', '🥉', '⭐', '⭐'];
+        const cores = [
+          'from-yellow-500/20 to-yellow-600/10 border-yellow-500/30',
+          'from-slate-400/20 to-slate-500/10 border-slate-400/30',
+          'from-orange-500/20 to-orange-600/10 border-orange-500/30',
+          'from-amber-500/20 to-amber-600/10 border-amber-500/30',
+          'from-purple-500/20 to-purple-600/10 border-purple-500/30'
+        ];
+        const textos = ['text-yellow-400', 'text-slate-300', 'text-orange-400', 'text-amber-400', 'text-purple-400'];
+        
+        return `
+          <div class="bg-gradient-to-r ${cores[index]} border rounded-xl p-2 sm:p-3 flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2 min-w-0 flex-1">
+              <span class="text-xl sm:text-2xl">${medalhas[index]}</span>
+              <div class="min-w-0 flex-1">
+                <p class="font-medium text-xs sm:text-sm truncate">${cliente.nome}</p>
+                <p class="text-xs text-slate-400">${cliente.quantidadeObras} obra${cliente.quantidadeObras !== 1 ? 's' : ''}</p>
+              </div>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <p class="font-bold text-xs sm:text-sm ${textos[index]}">${formatCurrency(cliente.totalGasto)}</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function renderFinanceiro() {
+      updateClienteSelects();
+      generateMonthOptions();
+      
+      let totalObras = obras.reduce((sum, o) => sum + (parseFloat(o.valor) || 0), 0);
+      let totalPago = 0;
+      
+      totalPago += parcelas.filter(p => p.status === 'Pago').reduce((sum, p) => sum + (parseFloat(p.valor) || 0), 0);
+      totalPago += obras.filter(o => o.entradaPaga).reduce((sum, o) => sum + (parseFloat(o.entrada) || 0), 0);
+      
+      const saldoDevedor = totalObras - totalPago;
+      
+      document.getElementById('fin-total').textContent = formatCurrency(totalObras);
+      document.getElementById('fin-pago').textContent = formatCurrency(totalPago);
+      document.getElementById('fin-devedor').textContent = formatCurrency(saldoDevedor);
+      
+      updateMonthlySales();
+      renderBestClients();
+      renderParcelas();
+    }
+    
+    function filterFinanceiro() {
+      renderParcelas();
+    }
+    
+    function filterParcelas(filter) {
+      currentParcelaFilter = filter;
+      
+      document.querySelectorAll('.parcela-filter-btn').forEach(btn => {
+        if (btn.dataset.filter === filter) {
+          btn.classList.add('bg-amber-500');
+          btn.classList.remove('bg-neutral-800');
+        } else {
+          btn.classList.remove('bg-amber-500');
+          btn.classList.add('bg-neutral-800');
+        }
+      });
+      
+      renderParcelas();
+    }
+    
+    function renderParcelas() {
+      const container = document.getElementById('parcelas-list');
+      const obraFilter = document.getElementById('filter-obra-financeiro').value;
+      
+      let items = [];
+      
+      obras.forEach(obra => {
+        if (obra.entrada && obra.entrada > 0) {
+          if (!obraFilter || obraFilter === obra.id) {
+            items.push({
+              type: 'entrada',
+              id: `entrada-${obra.id}`,
+              obraId: obra.id,
+              valor: obra.entrada,
+              status: obra.entradaPaga ? 'Pago' : 'Pendente',
+              vencimento: obra.dataInicio || null,
+              descricao: 'Entrada'
+            });
+          }
+        }
+      });
+      
+      parcelas.forEach(parcela => {
+        if (!obraFilter || obraFilter === parcela.obraId) {
+          items.push({
+            type: 'parcela',
+            ...parcela
+          });
+        }
+      });
+      
+      if (currentParcelaFilter === 'pendente') {
+        items = items.filter(i => i.status === 'Pendente');
+      } else if (currentParcelaFilter === 'pago') {
+        items = items.filter(i => i.status === 'Pago');
+      }
+      
+      items.sort((a, b) => {
+        if (!a.vencimento) return 1;
+        if (!b.vencimento) return -1;
+        return new Date(a.vencimento) - new Date(b.vencimento);
+      });
+      
+      if (items.length === 0) {
+        container.innerHTML = '<p class="text-slate-500 text-sm text-center py-8">Nenhum item encontrado</p>';
+        return;
+      }
+      
+      container.innerHTML = items.map(item => {
+        const obra = obras.find(o => o.id === item.obraId);
+        const cliente = obra ? clientes.find(c => c.id === obra.clienteId) : null;
+        const isOverdue = item.status === 'Pendente' && item.vencimento && new Date(item.vencimento) < new Date();
+        
+        const label = item.type === 'entrada' ? 'Entrada' : `Parcela ${item.numero}`;
+        
+        return `
+          <div class="p-3 sm:p-4 hover:bg-neutral-800/30 transition-all ${isOverdue ? 'bg-red-500/5' : ''}">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3">
+              <div class="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div class="w-10 h-10 rounded-xl ${item.type === 'entrada' ? 'bg-purple-500/20' : 'bg-amber-500/20'} flex items-center justify-center flex-shrink-0">
+                  <span class="text-lg">${item.type === 'entrada' ? '💵' : '📄'}</span>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="font-medium text-sm">${formatCurrency(item.valor)}</p>
+                  <p class="text-xs sm:text-sm text-slate-400 truncate">${label} - ${obra ? (JSON.parse(obra.servicos || '[]')[0]?.descricao || 'Obra') : 'N/A'}</p>
+                  ${cliente ? `<p class="text-xs text-slate-500 truncate">${cliente.nome}</p>` : ''}
+                </div>
+              </div>
+              <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0 flex-wrap justify-between sm:justify-end">
+                <div class="text-right">
+                  ${item.vencimento ? `
+                    <p class="text-xs sm:text-sm ${isOverdue ? 'text-red-400' : 'text-slate-300'}">${formatDate(item.vencimento)}</p>
+                    ${isOverdue ? '<p class="text-xs text-red-400">Vencida</p>' : ''}
+                  ` : '<p class="text-xs sm:text-sm text-slate-500">Sem vencimento</p>'}
+                </div>
+                <span class="px-2 py-1 rounded-lg text-xs font-medium ${item.status === 'Pago' ? 'status-pago' : 'status-pendente'} whitespace-nowrap">${item.status}</span>
+                <button onclick="togglePagamento('${item.type}', '${item.type === 'entrada' ? item.obraId : item.id}')" 
+                  class="p-1.5 sm:p-2 rounded-lg ${item.status === 'Pago' ? 'bg-orange-500/20 hover:bg-orange-500/30 text-orange-400' : 'bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400'} transition-all flex-shrink-0">
+                  ${item.status === 'Pago' ? 
+                    '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>' :
+                    '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+                  }
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function togglePagamento(type, id) {
+      if (type === 'entrada') {
+        const index = obras.findIndex(o => o.id === id);
+        if (index !== -1) {
+          obras[index].entradaPaga = !obras[index].entradaPaga;
+          saveToLocalStorage();
+          showToast(obras[index].entradaPaga ? 'Entrada marcada como paga!' : 'Entrada marcada como pendente!');
+        }
+      } else {
+        const index = parcelas.findIndex(p => p.id === id);
+        if (index !== -1) {
+          parcelas[index].status = parcelas[index].status === 'Pago' ? 'Pendente' : 'Pago';
+          saveToLocalStorage();
+          showToast(parcelas[index].status === 'Pago' ? 'Parcela marcada como paga!' : 'Parcela marcada como pendente!');
+        }
+      }
+      
+      renderFinanceiro();
+      renderObras();
+      updateDashboard();
+    }
+    
+    function closeDeleteModal() {
+      document.getElementById('modal-delete').classList.add('hidden');
+      deleteCallback = null;
+    }
+    
+    function confirmDelete() {
+      if (deleteCallback) {
+        deleteCallback();
+        closeDeleteModal();
+      }
+    }
+    
+    function onConfigChange(config) {
+      document.getElementById('system-title').textContent = config.system_title || defaultConfig.system_title;
+      document.getElementById('company-name').textContent = config.company_name || defaultConfig.company_name;
+    }
+    
+    function init() {
+      const now = new Date();
+      document.getElementById('current-date').textContent = now.toLocaleDateString('pt-BR', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+      
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange,
+          mapToCapabilities: (config) => ({
+            recolorables: [
+              {
+                get: () => config.primary_color || defaultConfig.primary_color,
+                set: (value) => window.elementSdk.setConfig({ primary_color: value })
+              }
+            ],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ['company_name', config.company_name || defaultConfig.company_name],
+            ['company_cnpj', config.company_cnpj || defaultConfig.company_cnpj],
+            ['company_address', config.company_address || defaultConfig.company_address],
+            ['company_phone', config.company_phone || defaultConfig.company_phone],
+            ['company_email', config.company_email || defaultConfig.company_email]
+          ])
+        });
+      }
+      
+      loadFromLocalStorage();
+      updateDashboard();
+      updateClienteSelects();
+    }
+    
+    init();
+  </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9cf8035b35e46499',t:'MTc3MTM1OTkxNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
